@@ -8,12 +8,16 @@ public class TestActorDAO {
 	public static void main(String[] args) {
 		ActorDAO actorDao = new ActorDAO();
 		try {
-			// actorDao.selectAll();
+			 actorDao.selectAll();
 			// actorDao.selectById(100);
-			ActorDTO actor = new ActorDTO();
-			actor.setFirstName("BUZZ");
-			actor.setLastName("LIGHTYEAR");
-			actorDao.createActor(actor);
+			/*
+			 * ActorDTO actor = new ActorDTO(); actor.setFirstName("Einstine");
+			 * actor.setLastName("Begals"); actor.setActorId(213); //
+			 * actorDao.updateActor(actor); actorDao.deleteActor(213);
+			 */
+			
+			//int actorId = actorDao.createActor(actor);
+			//System.out.println("Inserted Actor ID " + actorId);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

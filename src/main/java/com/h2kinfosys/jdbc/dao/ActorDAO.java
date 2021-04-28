@@ -22,7 +22,7 @@ public class ActorDAO {
 	public ArrayList<ActorDTO> selectAll() throws Exception{
 		ArrayList<ActorDTO> actors = new ArrayList<ActorDTO>();
 		Connection conn = ConnectionUtil.getConnection();
-		Statement stat = conn.createStatement();
+		Statement stat = conn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
 		ResultSet rs = stat.executeQuery(selectAll);
 		if(rs!= null) {
 			ActorDTO actor = null;
@@ -32,6 +32,13 @@ public class ActorDAO {
 				actor.setFirstName(rs.getString("first_name"));
 				actor.setLastName(rs.getString("last_name"));
 				actor.setLastUpdate(rs.getTimestamp("last_update"));
+				// Play with resultset
+				if(actor.getActorId() == 206) {
+					rs.updateString("first_name", "Charlie");
+					rs.updateRow();
+				}
+				rs.refreshRow();
+				actor.setFirstName(rs.getString("first_name"));
 				actors.add(actor);
 			}
 		}
@@ -65,22 +72,69 @@ public class ActorDAO {
 		return actors;
 	}
 	
-	
+	// Can this method return generated key?
 	public int createActor(ActorDTO actor) throws Exception{
-		
+		int actorId = 0;
 		Connection conn = ConnectionUtil.getConnection();
 		// As the parameters are dynamic, we use PreparedStatement
-		PreparedStatement pStat = conn.prepareStatement(create_actor);
+		PreparedStatement pStat = conn.prepareStatement(create_actor, Statement.RETURN_GENERATED_KEYS);
 		pStat.setString(1, actor.getFirstName());
 		pStat.setString(2, actor.getLastName());
 		
 		int numberOfRowsAffected = pStat.executeUpdate();
-
-		ConnectionUtil.closeConnection(conn);
 		if(numberOfRowsAffected == 1) {
 			System.out.println("Insert Successful " + numberOfRowsAffected);
+			ResultSet rs = pStat.getGeneratedKeys();
+			while(rs.next()) {
+				actorId = rs.getInt(1);
+			}
 		}
+		ConnectionUtil.closeConnection(conn);
+		return actorId;
+	}
+	
+	// Update method
+	public int updateActor(ActorDTO actor) throws Exception{
+		Connection conn = ConnectionUtil.getConnection();
+		// As the parameters are dynamic, we use PreparedStatement
+		PreparedStatement pStat = conn.prepareStatement(update_actor);
+		pStat.setString(1, actor.getFirstName());
+		pStat.setString(2, actor.getLastName());
+		pStat.setInt(3, actor.getActorId());
+		
+		int numberOfRowsAffected = pStat.executeUpdate();
+		if(numberOfRowsAffected == 1) {
+			System.out.println("Update Successful " + numberOfRowsAffected);
+		}
+		ConnectionUtil.closeConnection(conn);
 		return numberOfRowsAffected;
 	}
+	
+	//  Delete method
+	public int deleteActor(int actorId) throws Exception{
+		Connection conn = ConnectionUtil.getConnection();
+		conn.setAutoCommit(false);
+		int numberOfRowsAffected = 0;
+		try {
+			// As the parameters are dynamic, we use PreparedStatement
+			PreparedStatement pStat = conn.prepareStatement(delete_actor);
+			pStat.setInt(1, actorId);
+			
+			numberOfRowsAffected = pStat.executeUpdate();
+			if(numberOfRowsAffected == 1) {
+				System.out.println("Delete Successful " + numberOfRowsAffected);
+			}
+			conn.commit();
+		}catch(Exception exe) {
+			exe.printStackTrace();
+			conn.rollback();
+		}
+		ConnectionUtil.closeConnection(conn);
+		return numberOfRowsAffected;
+	}
+	
+	// Scrollable result sets
+	
+	
 	
 }
